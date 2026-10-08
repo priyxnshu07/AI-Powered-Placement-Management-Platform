@@ -3,13 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUsers, createUser, deleteUser, getAIConfig, updateAIConfig } from '../../api/admin';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import ErrorMessage from '../../components/shared/ErrorMessage';
+import type { CreateUserPayload, Role } from '../../types/api';
 
 const AdminDashboard: React.FC = () => {
   const queryClient = useQueryClient();
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'student' });
+  const [newUser, setNewUser] = useState<CreateUserPayload>({ name: '', email: '', password: '', role: 'student' });
   const [threshold, setThreshold] = useState(0.6);
 
-  const { data: users, isLoading: usersLoading, error: usersError } = useQuery({
+  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
     queryKey: ['adminUsers'],
     queryFn: async () => (await getUsers()).data.data,
   });
@@ -24,7 +25,7 @@ const AdminDashboard: React.FC = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => createUser(data),
+    mutationFn: createUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
       setNewUser({ name: '', email: '', password: '', role: 'student' });
@@ -69,7 +70,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div>
               <label>Role</label>
-              <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
+              <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value as Role})}>
                 <option value="student">Student</option>
                 <option value="recruiter">Recruiter</option>
                 <option value="placement_officer">Officer</option>
@@ -97,7 +98,7 @@ const AdminDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user: any) => (
+              {users.map((user) => (
                 <tr key={user.id}>
                   <td style={{ fontWeight: 500 }}>{user.name}</td>
                   <td>{user.email}</td>

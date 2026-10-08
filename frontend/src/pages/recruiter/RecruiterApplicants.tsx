@@ -17,7 +17,7 @@ const RecruiterApplicants: React.FC = () => {
     meeting_link: ''
   });
 
-  const { data: applicants, isLoading, error } = useQuery({
+  const { data: applicants = [], isLoading, error } = useQuery({
     queryKey: ['applicants', id],
     queryFn: async () => (await getApplicants(Number(id))).data.data,
   });
@@ -28,7 +28,7 @@ const RecruiterApplicants: React.FC = () => {
   });
 
   const interviewMutation = useMutation({
-    mutationFn: (data: any) => scheduleInterview(data),
+    mutationFn: scheduleInterview,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applicants', id] });
       setSchedulingId(null);
@@ -63,7 +63,7 @@ const RecruiterApplicants: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {applicants.map((app: any) => (
+            {applicants.map((app) => (
               <React.Fragment key={app.id}>
                 <tr>
                   <td>{app.student_name}</td>
@@ -74,7 +74,7 @@ const RecruiterApplicants: React.FC = () => {
                     </div>
                   </td>
                   <td>
-                    <AIScoreBar score={app.ai_match_score} reason={app.ai_match_reason} />
+                    <AIScoreBar score={app.ai_match_score ?? 0} reason={app.ai_match_reason ?? ''} />
                   </td>
                   <td><StatusBadge status={app.status} /></td>
                   <td>

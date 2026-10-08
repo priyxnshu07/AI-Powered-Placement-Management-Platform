@@ -4,18 +4,11 @@ import type { AxiosError } from 'axios';
 import { applyToJob } from '../../api/student';
 import AIScoreBar from '../shared/AIScoreBar';
 import StatusBadge from '../shared/StatusBadge';
+import { formatDate } from '../../utils/format';
+import type { Job } from '../../types/api';
 
 interface JobMatchCardProps {
-  job: {
-    id: number;
-    title: string;
-    company_name: string;
-    salary_lpa: number;
-    deadline: string;
-    required_skills: string[];
-    ai_match_score?: number;
-    ai_match_reason?: string;
-  };
+  job: Job;
   isApplied: boolean;
 }
 
@@ -62,10 +55,10 @@ const JobMatchCard: React.FC<JobMatchCardProps> = ({ job, isApplied }) => {
 
       <div style={{ marginTop: 'auto' }}>
         <div style={{ fontSize: '0.875rem', marginBottom: '12px' }}>
-          <strong>LPA:</strong> ₹{job.salary_lpa} | <strong>Deadline:</strong> {new Date(job.deadline).toLocaleDateString()}
+          <strong>LPA:</strong> ₹{job.salary_lpa} | <strong>Deadline:</strong> {formatDate(job.deadline)}
         </div>
 
-        {job.ai_match_score !== undefined && (
+        {job.ai_match_score != null && (
           <AIScoreBar score={job.ai_match_score} reason={job.ai_match_reason || ''} />
         )}
 

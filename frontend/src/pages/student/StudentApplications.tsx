@@ -36,14 +36,14 @@ const StudentApplications: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {applications.map((app: any) => (
+            {applications.map((app) => (
               <React.Fragment key={app.id}>
                 <tr>
                   <td style={{ fontWeight: 500 }}>{app.title}</td>
                   <td>{app.company_name}</td>
                   <td>{new Date(app.applied_at).toLocaleDateString()}</td>
                   <td style={{ width: '250px' }}>
-                    <AIScoreBar score={app.ai_match_score} reason={app.ai_match_reason} />
+                    <AIScoreBar score={app.ai_match_score ?? 0} reason={app.ai_match_reason ?? ''} />
                   </td>
                   <td><StatusBadge status={app.status} /></td>
                 </tr>

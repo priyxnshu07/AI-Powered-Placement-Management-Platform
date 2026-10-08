@@ -4,6 +4,7 @@ import { getJobs, createJob } from '../../api/recruiter';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import ErrorMessage from '../../components/shared/ErrorMessage';
 import { Link } from 'react-router-dom';
+import { formatDate } from '../../utils/format';
 
 const RecruiterDashboard: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
@@ -17,13 +18,13 @@ const RecruiterDashboard: React.FC = () => {
   });
 
   const queryClient = useQueryClient();
-  const { data: jobs, isLoading, error } = useQuery({
+  const { data: jobs = [], isLoading, error } = useQuery({
     queryKey: ['recruiterJobs'],
     queryFn: async () => (await getJobs()).data.data,
   });
 
   const createJobMutation = useMutation({
-    mutationFn: (data: any) => createJob(data),
+    mutationFn: createJob,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recruiterJobs'] });
       setShowForm(false);
@@ -95,7 +96,7 @@ const RecruiterDashboard: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {jobs.map((job: any) => (
+            {jobs.map((job) => (
               <tr key={job.id}>
                 <td style={{ fontWeight: 500 }}>{job.title}</td>
                 <td>
@@ -105,7 +106,7 @@ const RecruiterDashboard: React.FC = () => {
                   </div>
                 </td>
                 <td>{job.min_cgpa}</td>
-                <td>{new Date(job.deadline).toLocaleDateString()}</td>
+                <td>{formatDate(job.deadline)}</td>
                 <td>
                   <span className={`badge ${job.is_active ? 'badge-green' : 'badge-red'}`}>
                     {job.is_active ? 'Active' : 'Closed'}

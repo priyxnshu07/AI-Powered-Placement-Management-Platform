@@ -23,7 +23,7 @@ const StudentInterviews: React.FC = () => {
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
-        {interviews.map((interview: any) => (
+        {interviews.map((interview) => (
           <div key={interview.id} className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>

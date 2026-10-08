@@ -18,7 +18,7 @@ const StudentDashboard: React.FC = () => {
 
   const stats = {
     applied: applications.length,
-    shortlisted: applications.filter((a: any) => a.status === 'shortlisted').length,
+    shortlisted: applications.filter((a) => a.status === 'shortlisted').length,
     interviews: interviews.length
   };
 
@@ -68,13 +68,13 @@ const StudentDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {applications.slice(0, 5).map((app: any) => (
+              {applications.slice(0, 5).map((app) => (
                 <tr key={app.id}>
                   <td>{app.title}</td>
                   <td>{app.company_name}</td>
                   <td><StatusBadge status={app.status} /></td>
                   <td style={{ width: '200px' }}>
-                    <AIScoreBar score={app.ai_match_score} reason={app.ai_match_reason} />
+                    <AIScoreBar score={app.ai_match_score ?? 0} reason={app.ai_match_reason ?? ''} />
                   </td>
                 </tr>
               ))}
@@ -96,7 +96,7 @@ const StudentDashboard: React.FC = () => {
           <Link to="/student/interviews" className="btn btn-secondary btn-sm">View All</Link>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-          {interviews.slice(0, 3).map((interview: any) => (
+          {interviews.slice(0, 3).map((interview) => (
             <div key={interview.id} className="card">
               <h3 style={{ margin: 0 }}>{interview.title}</h3>
               <p style={{ color: 'var(--muted)', margin: '4px 0 12px 0' }}>{interview.company_name}</p>

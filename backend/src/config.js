@@ -32,6 +32,9 @@ const config = {
   databaseUrl: required('DATABASE_URL'),
   // Managed Postgres (Neon, Supabase, Render) requires TLS; local Docker does not.
   databaseSsl: process.env.DATABASE_SSL === 'true',
+  // Verify the server certificate by default (Neon, Supabase, Render use public CAs).
+  // Set DATABASE_SSL_VERIFY=false only for providers with self-signed certificates.
+  databaseSslVerify: process.env.DATABASE_SSL_VERIFY !== 'false',
 
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',

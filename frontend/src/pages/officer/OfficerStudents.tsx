@@ -5,7 +5,7 @@ import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import ErrorMessage from '../../components/shared/ErrorMessage';
 
 const OfficerStudents: React.FC = () => {
-  const { data: students, isLoading, error } = useQuery({
+  const { data: students = [], isLoading, error } = useQuery({
     queryKey: ['allStudents'],
     queryFn: async () => (await getStudents()).data.data,
   });
@@ -32,7 +32,7 @@ const OfficerStudents: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {students.map((student: any) => (
+            {students.map((student) => (
               <tr key={student.id}>
                 <td style={{ fontWeight: 500 }}>{student.name}</td>
                 <td>{student.branch}</td>
