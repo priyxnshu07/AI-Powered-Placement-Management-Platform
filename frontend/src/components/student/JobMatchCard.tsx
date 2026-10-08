@@ -1,5 +1,6 @@
 import React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { AxiosError } from 'axios';
 import { applyToJob } from '../../api/student';
 import AIScoreBar from '../shared/AIScoreBar';
 import StatusBadge from '../shared/StatusBadge';
@@ -22,7 +23,7 @@ const JobMatchCard: React.FC<JobMatchCardProps> = ({ job, isApplied }) => {
   const queryClient = useQueryClient();
   const [success, setSuccess] = React.useState(false);
 
-  const mutation = useMutation({
+  const mutation = useMutation<unknown, AxiosError<{ error?: string }>, number>({
     mutationFn: (id: number) => applyToJob(id),
     onSuccess: () => {
       setSuccess(true);
@@ -30,7 +31,17 @@ const JobMatchCard: React.FC<JobMatchCardProps> = ({ job, isApplied }) => {
       queryClient.invalidateQueries({ queryKey: ['eligibleJobs'] });
       setTimeout(() => setSuccess(false), 3000);
     },
+    onError: (err) => {
+      // 409 = already applied (e.g. from another tab): refresh so the button reflects it.
+      if (err.response?.status === 409) {
+        queryClient.invalidateQueries({ queryKey: ['studentApplications'] });
+      }
+    },
   });
+
+  const errorMessage = mutation.isError
+    ? mutation.error.response?.data?.error || 'Could not apply. Please try again.'
+    : null;
 
   return (
     <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -71,6 +82,12 @@ const JobMatchCard: React.FC<JobMatchCardProps> = ({ job, isApplied }) => {
           >
             {mutation.isPending ? 'Applying...' : isApplied ? 'Already Applied' : 'Apply Now'}
           </button>
+        )}
+
+        {errorMessage && (
+          <div role="alert" style={{ color: 'var(--danger, #dc2626)', fontSize: '0.875rem', textAlign: 'center', marginTop: '8px' }}>
+            {errorMessage}
+          </div>
         )}
       </div>
     </div>

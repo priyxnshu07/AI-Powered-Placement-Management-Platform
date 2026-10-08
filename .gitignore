@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Environment — never commit real secrets; copy .env.example instead
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+coverage/
+
+# Logs & OS noise
+*.log
+npm-debug.log*
+.DS_Store

@@ -1,53 +1,43 @@
 const bcrypt = require('bcryptjs');
+const config = require('../config');
 const PostgresUserRepo = require('../repositories/PostgresUserRepo');
-const db = require('../db');
+const { badRequest, notFound } = require('../errors');
 
 // SOLID-ISP: Only admin operations
 class AdminController {
-  async getAllUsers(req, res, next) {
-    try {
-      const users = await PostgresUserRepo.getAllUsers();
-      res.json({ success: true, data: users });
-    } catch (err) {
-      next(err);
-    }
+  async getAllUsers(req, res) {
+    const users = await PostgresUserRepo.getAllUsers();
+    res.json({ success: true, data: users });
   }
 
-  async createUser(req, res, next) {
-    try {
-      const { name, email, password, role } = req.body;
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await PostgresUserRepo.create({ name, email, password: hashedPassword, role });
-      res.status(201).json({ success: true, data: user });
-    } catch (err) {
-      next(err);
-    }
+  async createUser(req, res) {
+    const { name, email, password, role } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // A duplicate email surfaces as Postgres 23505 and is returned as 409 by the error handler.
+    const user = await PostgresUserRepo.create({ name, email, password: hashedPassword, role });
+    res.status(201).json({ success: true, data: user });
   }
 
-  async deactivateUser(req, res, next) {
-    try {
-      // Logic for soft delete / deactivation
-      await db.query('UPDATE users SET is_active = false WHERE id = $1', [req.params.id]);
-      res.json({ success: true, message: 'User deactivated' });
-    } catch (err) {
-      next(err);
-    }
+  async deactivateUser(req, res) {
+    if (req.params.id === req.user.id) throw badRequest('You cannot deactivate your own account');
+    const user = await PostgresUserRepo.deactivate(req.params.id);
+    if (!user) throw notFound('User not found');
+    // Takes effect immediately: authMiddleware re-checks is_active on every request.
+    res.json({ success: true, message: 'User deactivated', data: user });
   }
 
   async getAIConfig(req, res) {
-    res.json({
-      success: true,
-      data: {
-        confidenceThreshold: process.env.AI_CONFIDENCE_THRESHOLD || 0.6
-      }
-    });
+    res.json({ success: true, data: { confidenceThreshold: config.aiConfidenceThreshold } });
   }
 
   async updateAIConfig(req, res) {
-    // In a real app, this would update a database setting
-    const { threshold } = req.body;
-    process.env.AI_CONFIDENCE_THRESHOLD = threshold;
-    res.json({ success: true, message: 'AI config updated (session-only)', data: { threshold } });
+    // In-memory for now (resets on restart); a settings table would persist it.
+    config.aiConfidenceThreshold = req.body.threshold;
+    res.json({
+      success: true,
+      message: 'AI config updated (in-memory, resets on restart)',
+      data: { threshold: config.aiConfidenceThreshold },
+    });
   }
 }
 
