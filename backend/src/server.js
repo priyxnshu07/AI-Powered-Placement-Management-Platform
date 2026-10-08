@@ -1,70 +1,43 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const dotenv = require('dotenv');
-
+const config = require('./config');
+const db = require('./db');
+const { createApp } = require('./app');
 const { createTables } = require('./database/schema');
 const { seedData } = require('./database/seed');
-const errorHandler = require('./middleware/errorHandler');
+const { createRedisCache, noopCache } = require('./cache/redisCache');
+const aiMatchingService = require('./services/AIMatchingService');
+const geminiProvider = require('./ai/geminiProvider');
 
-// Route Imports
-const authRoutes = require('./routes/authRoutes');
-const studentRoutes = require('./routes/studentRoutes');
-const recruiterRoutes = require('./routes/recruiterRoutes');
-const officerRoutes = require('./routes/officerRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-
-dotenv.config();
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Security & Logging Middleware
-app.use(cors({ origin: true, credentials: true }));
-app.use(helmet());
-app.use(morgan('dev'));
-app.use(express.json());
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/student', studentRoutes);
-app.use('/api/recruiter', recruiterRoutes);
-app.use('/api/officer', officerRoutes);
-app.use('/api/admin', adminRoutes);
-
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date(),
-    service: 'placement-platform-backend'
-  });
-});
-
-// Database Initialization & Server Start
 async function startServer() {
-  try {
-    await createTables();
-    await seedData();
-    
-    app.use(errorHandler);
+  await createTables();
+  if (config.seedDemoData) await seedData();
 
-    app.listen(PORT, () => {
-      console.log(`
-🚀 Server running on port ${PORT}
-🔗 Health Check: http://localhost:${PORT}/health
-      `);
-      console.log('Mounted Routes:');
-      console.log('- /api/auth');
-      console.log('- /api/student');
-      console.log('- /api/recruiter');
-      console.log('- /api/officer');
-      console.log('- /api/admin');
+  const cache = config.redisUrl ? createRedisCache(config.redisUrl) : noopCache;
+  aiMatchingService.setCache(cache);
+
+  const app = createApp({ cache });
+  const server = app.listen(config.port, () => {
+    console.log(`Server listening on port ${config.port} (${config.env})`);
+    console.log(`AI matching: ${geminiProvider.isConfigured ? `Gemini (${geminiProvider.model})` : 'rule-based only (GEMINI_API_KEY not set)'}`);
+    console.log(`Match cache: ${cache.name}`);
+  });
+
+  // Graceful shutdown: stop taking new connections, let in-flight requests
+  // finish, then close Redis and the Postgres pool. Hosting platforms send
+  // SIGTERM on every deploy.
+  const shutdown = (signal) => {
+    console.log(`${signal} received, shutting down...`);
+    server.close(async () => {
+      await cache.close();
+      await db.pool.end();
+      process.exit(0);
     });
-  } catch (err) {
-    console.error('Failed to start server:', err);
-    process.exit(1);
-  }
+    setTimeout(() => process.exit(1), 10_000).unref();
+  };
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});

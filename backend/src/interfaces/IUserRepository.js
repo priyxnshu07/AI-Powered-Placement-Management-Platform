@@ -14,11 +14,11 @@ module.exports = {
   },
 
   /**
-   * Finds a user by their email address.
+   * Finds a user by email, including the password hash. Only for login.
    * @param {string} email 
    * @returns {Promise<Object>}
    */
-  findByEmail: async (email) => {
+  findByEmailWithPassword: async (email) => {
     throw new Error('Method not implemented');
   },
 
@@ -32,12 +32,12 @@ module.exports = {
   },
 
   /**
-   * Updates a student's profile data.
+   * Creates or updates the student-editable profile fields (never is_placed).
    * @param {string} id 
    * @param {Object} data 
    * @returns {Promise<Object>}
    */
-  updateProfile: async (id, data) => {
+  upsertProfile: async (id, data) => {
     throw new Error('Method not implemented');
   }
 };

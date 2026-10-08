@@ -8,7 +8,7 @@ const db = require('../db');
 const PostgresJobRepo = {
   async findById(id) {
     const { rows } = await db.query(
-      `SELECT jl.*, c.name as company_name, c.industry
+      `SELECT jl.*, c.name as company_name, c.industry, c.recruiter_id
        FROM job_listings jl
        JOIN companies c ON jl.company_id = c.id
        WHERE jl.id = $1`,
@@ -35,6 +35,7 @@ const PostgresJobRepo = {
        FROM job_listings jl
        JOIN companies c ON jl.company_id = c.id
        WHERE jl.is_active = true AND jl.min_cgpa <= $1
+         AND (jl.deadline IS NULL OR jl.deadline >= CURRENT_DATE)
        ORDER BY jl.salary_lpa DESC`,
       [cgpa]
     );

@@ -59,15 +59,16 @@ async function seedData() {
     // Insert Job Listings
     const jobs = await db.query(`
       INSERT INTO job_listings (company_id, title, description, required_skills, min_cgpa, salary_lpa, deadline) VALUES
-      (${companyMap['TechCorp']}, 'Full Stack Developer', 'Exciting role for full stack devs', ARRAY['React','Node.js','SQL'], 8.0, 12.5, '2024-12-31'),
-      (${companyMap['TechCorp']}, 'ML Engineer', 'Work on cutting edge AI', ARRAY['Python','ML','TensorFlow'], 8.5, 15.0, '2024-12-31'),
-      (${companyMap['Infosys']}, 'System Associate', 'Entry level IT role', ARRAY['Java','SQL'], 7.0, 4.5, '2024-11-30')
+      (${companyMap['TechCorp']}, 'Full Stack Developer', 'Exciting role for full stack devs', ARRAY['React','Node.js','SQL'], 8.0, 12.5, CURRENT_DATE + 60),
+      (${companyMap['TechCorp']}, 'ML Engineer', 'Work on cutting edge AI', ARRAY['Python','ML','TensorFlow'], 8.5, 15.0, CURRENT_DATE + 45),
+      (${companyMap['Infosys']}, 'System Associate', 'Entry level IT role', ARRAY['Java','SQL'], 7.0, 4.5, CURRENT_DATE + 30)
       RETURNING id, title;
     `);
 
     const jobMap = {};
     jobs.rows.forEach(j => jobMap[j.title] = j.id);
 
+    // Deadlines are relative to the seed date so the live demo never shows only expired jobs.
     // Insert Applications
     await db.query(`
       INSERT INTO applications (student_id, job_id, ai_match_score, ai_match_reason) VALUES

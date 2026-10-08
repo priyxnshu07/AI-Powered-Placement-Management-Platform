@@ -12,6 +12,7 @@ An intelligent talent bridge between engineering colleges and recruiters, built 
 2. **Backend Setup:**
    ```bash
    cd backend
+   cp .env.example .env   # add GEMINI_API_KEY to enable LLM matching (optional)
    npm install
    npm run dev # Auto-creates tables and seeds data
    ```
@@ -19,8 +20,15 @@ An intelligent talent bridge between engineering colleges and recruiters, built 
 3. **Frontend Setup:**
    ```bash
    cd frontend
+   cp .env.example .env   # VITE_API_URL points at the backend
    npm install
    npm run dev # Launches at http://localhost:5173
+   ```
+
+4. **Run the tests** (needs the Postgres from step 1; uses a separate `placement_test` database):
+   ```bash
+   docker exec placement-postgres psql -U admin -d placement_db -c "CREATE DATABASE placement_test"
+   cd backend && npm test
    ```
 
 ## 🔐 Test Accounts
@@ -46,7 +54,9 @@ An intelligent talent bridge between engineering colleges and recruiters, built 
 
 The platform uses a **Dual-Engine Matching Strategy**:
 1. **Primary (Gemini):** Uses LLM semantic analysis to match student skills and intent against job descriptions, providing human-readable matching rationales.
-2. **Fallback (Rule-based):** A deterministic engine that ensures 100% availability by computing scores based on skill intersection and CGPA eligibility if the AI service is unavailable.
+2. **Fallback (Rule-based):** A deterministic engine that keeps matching available when Gemini is unconfigured, slow (8s timeout), down, or returns malformed output. It scores skill overlap and CGPA eligibility.
+
+Gemini results are cached in Redis, keyed by a hash of the exact inputs, so repeat matches skip the LLM call. If Redis is unavailable the app runs uncached rather than failing.
 
 ## 📁 Project Structure
 

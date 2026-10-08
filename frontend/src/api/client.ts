@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+// Set VITE_API_URL at build time (e.g. in Vercel) to point at the deployed backend.
 const client = axios.create({
-  baseURL: 'http://127.0.0.1:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  timeout: 20_000,
 });
 
 client.interceptors.request.use((config) => {

@@ -14,7 +14,7 @@ const AdminDashboard: React.FC = () => {
     queryFn: async () => (await getUsers()).data.data,
   });
 
-  const { data: aiConfig, isLoading: aiLoading } = useQuery({
+  const { isLoading: aiLoading } = useQuery({
     queryKey: ['aiConfig'],
     queryFn: async () => {
       const res = await getAIConfig();
