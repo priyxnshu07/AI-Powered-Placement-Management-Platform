@@ -1,0 +1,35 @@
+# Render Blueprint for the backend API.
+# Render dashboard → New → Blueprint → pick this repo. Render reads this file,
+# creates the service, and prompts for every `sync: false` value.
+services:
+  - type: web
+    name: placement-api
+    runtime: docker
+    plan: free
+    region: singapore # closest Render region to India; cannot be changed later
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    # Deploy only after the GitHub Actions CI checks pass on main, so a commit
+    # that breaks tests never reaches the live demo.
+    autoDeployTrigger: checksPass
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL # Neon connection string
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
+      - key: REDIS_URL # Upstash rediss:// URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS # the Vercel frontend URL, e.g. https://placement-ai.vercel.app
+        sync: false
+      - key: GEMINI_API_KEY # optional: leave blank to use rule-based matching only
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash

@@ -48,7 +48,8 @@ function createApp({ rateLimits, cache } = {}) {
   app.use('/api/admin', adminRoutes());
 
   // Liveness + dependency status, for the hosting platform's health check.
-  app.get('/health', async (req, res) => {
+  // Also served under /api so the frontend can reach it via its API base URL.
+  app.get(['/health', '/api/health'], async (req, res) => {
     let database = 'ok';
     try {
       await db.query('SELECT 1');

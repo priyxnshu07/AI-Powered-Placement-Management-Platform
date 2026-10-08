@@ -3,7 +3,7 @@ const config = require('./config');
 
 const pool = new Pool({
   connectionString: config.databaseUrl,
-  ssl: config.databaseSsl ? { rejectUnauthorized: false } : undefined,
+  ssl: config.databaseSsl ? { rejectUnauthorized: config.databaseSslVerify } : undefined,
   max: 10,
   idleTimeoutMillis: 30_000,
 });
