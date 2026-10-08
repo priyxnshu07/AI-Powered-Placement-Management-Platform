@@ -20,16 +20,28 @@ const noopCache = {
 function createRedisCache(url, { logger = console } = {}) {
   const { createClient } = require('redis');
 
-  const client = createClient({
-    url,
-    // Fail commands immediately while disconnected instead of queueing them
-    // behind a reconnect; a queued GET would stall the request it serves.
-    disableOfflineQueue: true,
-    socket: {
-      connectTimeout: 2000,
-      reconnectStrategy: (retries) => Math.min(retries * 200, 5000),
-    },
-  });
+  let client;
+  try {
+    client = createClient({
+      url,
+      // Fail commands immediately while disconnected instead of queueing them
+      // behind a reconnect; a queued GET would stall the request it serves.
+      disableOfflineQueue: true,
+      socket: {
+        connectTimeout: 2000,
+        reconnectStrategy: (retries) => Math.min(retries * 200, 5000),
+      },
+    });
+  } catch (err) {
+    // A malformed REDIS_URL (e.g. pasted with quotes or a "REDIS_URL=" prefix)
+    // throws synchronously. Degrade to no cache instead of crashing the app.
+    // Never log `err` itself: Node's URL error echoes the input, password included.
+    logger.warn(
+      `[redis] REDIS_URL is not a valid URL (${err.code || err.name}); running without a cache. ` +
+        'Expected a value like rediss://default:<password>@<host>:6379 with no quotes or "REDIS_URL=" prefix.'
+    );
+    return noopCache;
+  }
 
   let lastErrorLog = 0;
   client.on('error', (err) => {

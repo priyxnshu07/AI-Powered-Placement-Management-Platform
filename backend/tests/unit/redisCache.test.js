@@ -15,6 +15,19 @@ describe('redisCache graceful degradation', () => {
     }
   });
 
+  test('a malformed REDIS_URL falls back to no cache without crashing or leaking the secret', () => {
+    const logger = { warn: jest.fn() };
+    const pasted = 'REDIS_URL="rediss://default:sup3r-secret@example.upstash.io:6379"';
+
+    const cache = createRedisCache(pasted, { logger });
+
+    expect(cache).toBe(noopCache);
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    const message = logger.warn.mock.calls[0][0];
+    expect(message).toMatch(/not a valid URL/);
+    expect(message).not.toContain('sup3r-secret');
+  });
+
   test('noopCache always misses', async () => {
     await noopCache.setJSON('k', { a: 1 }, 60);
     await expect(noopCache.getJSON('k')).resolves.toBeNull();
