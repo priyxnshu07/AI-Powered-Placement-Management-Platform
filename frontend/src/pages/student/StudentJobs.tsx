@@ -4,6 +4,7 @@ import { getEligibleJobs, getApplications } from '../../api/student';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import ErrorMessage from '../../components/shared/ErrorMessage';
 import JobMatchCard from '../../components/student/JobMatchCard';
+import { deadlineSortKey } from '../../utils/format';
 
 const StudentJobs: React.FC = () => {
   const [filter, setFilter] = useState('');
@@ -23,17 +24,17 @@ const StudentJobs: React.FC = () => {
   if (jobsQuery.error) return <ErrorMessage message="Failed to load jobs" />;
 
   const jobs = jobsQuery.data || [];
-  const appliedJobIds = new Set((applicationsQuery.data || []).map((a: any) => a.job_id));
+  const appliedJobIds = new Set((applicationsQuery.data || []).map((a) => a.job_id));
 
   const filteredJobs = jobs
-    .filter((job: any) => 
+    .filter((job) => 
       job.title.toLowerCase().includes(filter.toLowerCase()) ||
-      job.company_name.toLowerCase().includes(filter.toLowerCase()) ||
+      (job.company_name ?? '').toLowerCase().includes(filter.toLowerCase()) ||
       job.required_skills.some((s: string) => s.toLowerCase().includes(filter.toLowerCase()))
     )
-    .sort((a: any, b: any) => {
-      if (sortBy === 'salary') return b.salary_lpa - a.salary_lpa;
-      if (sortBy === 'deadline') return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    .sort((a, b) => {
+      if (sortBy === 'salary') return (b.salary_lpa ?? 0) - (a.salary_lpa ?? 0);
+      if (sortBy === 'deadline') return deadlineSortKey(a.deadline) - deadlineSortKey(b.deadline);
       return (b.ai_match_score || 0) - (a.ai_match_score || 0);
     });
 
@@ -73,7 +74,7 @@ const StudentJobs: React.FC = () => {
         gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
         gap: '24px' 
       }}>
-        {filteredJobs.map((job: any) => (
+        {filteredJobs.map((job) => (
           <JobMatchCard 
             key={job.id} 
             job={job} 

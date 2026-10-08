@@ -11,13 +11,13 @@ const OfficerDashboard: React.FC = () => {
     queryFn: async () => (await getDashboard()).data.data,
   });
 
-  const { data: applications, isLoading: appsLoading } = useQuery({
+  const { data: applications = [], isLoading: appsLoading } = useQuery({
     queryKey: ['allApplications'],
     queryFn: async () => (await getApplications()).data.data,
   });
 
   if (dashLoading || appsLoading) return <LoadingSpinner />;
-  if (dashError) return <ErrorMessage message="Failed to load dashboard" />;
+  if (dashError || !dashboard) return <ErrorMessage message="Failed to load dashboard" />;
 
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -54,7 +54,7 @@ const OfficerDashboard: React.FC = () => {
         <section>
           <h2>Branch-wise Placement</h2>
           <div className="card">
-            {dashboard.branchWiseStats.map((branch: any) => (
+            {dashboard.branchWiseStats.map((branch) => (
               <div key={branch.branch} style={{ marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '4px' }}>
                   <span>{branch.branch}</span>
@@ -63,7 +63,7 @@ const OfficerDashboard: React.FC = () => {
                 <div style={{ height: '12px', background: 'var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
                   <div style={{ 
                     height: '100%', 
-                    width: `${(branch.placed / branch.total) * 100}%`, 
+                    width: `${Number(branch.total) > 0 ? (Number(branch.placed) / Number(branch.total)) * 100 : 0}%`, 
                     background: 'var(--success)',
                     borderRadius: '6px'
                   }} />
@@ -84,7 +84,7 @@ const OfficerDashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {dashboard.topRecruiters.map((rec: any) => (
+                {dashboard.topRecruiters.map((rec) => (
                   <tr key={rec.name}>
                     <td>{rec.name}</td>
                     <td style={{ fontWeight: 600 }}>{rec.offers}</td>
@@ -110,7 +110,7 @@ const OfficerDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {applications.slice(0, 10).map((app: any) => (
+              {applications.slice(0, 10).map((app) => (
                 <tr key={app.id}>
                   <td style={{ fontWeight: 500 }}>{app.student_name}</td>
                   <td>{app.title}</td>

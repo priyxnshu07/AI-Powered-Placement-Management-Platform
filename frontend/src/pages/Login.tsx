@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import ErrorMessage from '../components/shared/ErrorMessage';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
+import { isAxiosError } from 'axios';
+import type { ApiErrorBody } from '../types/api';
 
 // ISP: No role-specific logic here — just authentication entry point
 const Login: React.FC = () => {
@@ -30,8 +32,9 @@ const Login: React.FC = () => {
         case 'admin': navigate('/admin'); break;
         default: navigate('/');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
+    } catch (err) {
+      const message = isAxiosError<ApiErrorBody>(err) ? err.response?.data?.error : undefined;
+      setError(message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
