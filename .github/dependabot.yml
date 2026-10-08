@@ -14,6 +14,11 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
+    ignore:
+      # typescript-eslint supports TypeScript < 6.1 only; TS 7 breaks `npm ci`.
+      # Remove once typescript-eslint's peer range includes newer versions.
+      - dependency-name: typescript
+        versions: [">=6.1.0"]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
